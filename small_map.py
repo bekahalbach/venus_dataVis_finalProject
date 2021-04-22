@@ -88,7 +88,7 @@ class SliderCallbackMetallic:
 #Loader for our structured dataset
 imageReader = vtk.vtkXMLImageDataReader()
 #imageReader = vtk.vtkBMPReader()
-imageReader.SetFileName("./map.vti")
+imageReader.SetFileName("./venus_topo.vti")
 imageReader.Update()
 
 #Print dimensions and range of the 3d image
@@ -115,7 +115,7 @@ merge = vtk.vtkMergeFilter()
 merge.SetGeometryConnection(warp.GetOutputPort())
 merge.SetScalarsConnection(imageReader.GetOutputPort())
 mapper = vtk.vtkDataSetMapper()
-mapper.SetInputConnection(merge.GetOutputPort())
+mapper.SetInputConnection(warp.GetOutputPort())
 mapper.SetScalarRange(0, 255)
 actor = vtk.vtkActor()
 actor.SetMapper(mapper)
