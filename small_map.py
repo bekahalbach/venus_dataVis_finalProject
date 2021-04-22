@@ -3,16 +3,14 @@
 """
 Created on Fri Apr  2 14:47:21 2021
 
-@author: nadim
+@author: Bekah
 """
 
 #!/usr/bin/env python
 
 ##################### TUTORIALS USED: #####################
 
-    #ColorTransferFunction: https://kitware.github.io/vtk-js/api/Rendering_Core_ColorTransferFunction.html
-    #ScaleBar: https://python.hotexamples.com/examples/vtk/-/vtkScalarBarActor/python-vtkscalarbaractor-function-examples.html
-    #MarchingCubes: https://lorensen.github.io/VTKExamples/site/Python/Medical/MedicalDemo1/
+    #
     
 ###############################################################
 
@@ -24,6 +22,68 @@ colors = vtk.vtkNamedColors()
 
 # # #Interactor style that handles mouse and keyboard events
 
+class SliderProperties:
+    tubeWidth = 0.008
+    sliderLength = 0.008
+    titleHeight = 0.02
+    labelHeight = 0.02
+
+    minimumValue = 0.0
+    maximumValue = 40.0
+    initialValue = 1.0
+
+    p1 = [0.1, 0.1]
+    p2 = [0.9, 0.1]
+
+    title = None
+
+
+def MakeSliderWidget(properties):
+    slider = vtk.vtkSliderRepresentation2D()
+
+    slider.SetMinimumValue(properties.minimumValue)
+    slider.SetMaximumValue(properties.maximumValue)
+    slider.SetValue(properties.initialValue)
+    slider.SetTitleText(properties.title)
+
+    slider.GetPoint1Coordinate().SetCoordinateSystemToNormalizedDisplay()
+    slider.GetPoint1Coordinate().SetValue(properties.p1[0], properties.p1[1])
+    slider.GetPoint2Coordinate().SetCoordinateSystemToNormalizedDisplay()
+    slider.GetPoint2Coordinate().SetValue(properties.p2[0], properties.p2[1])
+
+    slider.SetTubeWidth(properties.tubeWidth)
+    slider.SetSliderLength(properties.sliderLength)
+    slider.SetTitleHeight(properties.titleHeight)
+    slider.SetLabelHeight(properties.labelHeight)
+
+    sliderWidget = vtk.vtkSliderWidget()
+    sliderWidget.SetRepresentation(slider)
+
+    return sliderWidget
+
+
+class SliderCallbackMetallic:
+    def __init__(self, actorProperty):
+        self.actorProperty = actorProperty
+
+    def __call__(self, caller, ev):
+        sliderWidget = caller
+        value = sliderWidget.GetRepresentation().GetValue()
+       # self.actorProperty.SetMetallic(value)
+        warp = vtk.vtkWarpScalar()
+        warp.SetInputConnection(geometry.GetOutputPort())
+        warp.SetScaleFactor(value)
+    
+    #Use vtkMergeFilter to combine the original image with the warped geometry.
+        merge = vtk.vtkMergeFilter()
+        merge.SetGeometryConnection(warp.GetOutputPort())
+        merge.SetScalarsConnection(imageReader.GetOutputPort())
+        mapper = vtk.vtkDataSetMapper()
+        mapper.SetInputConnection(merge.GetOutputPort())
+       #self.actorProperty.SetScaleFactor(value)
+        actor.SetMapper(mapper)
+
+#############################################################################
 
 #Loader for our structured dataset
 imageReader = vtk.vtkXMLImageDataReader()
@@ -48,10 +108,7 @@ geometry.SetInputConnection(luminance.GetOutputPort())
     # Warp the data in a direction perpendicular to the image plane.
 warp = vtk.vtkWarpScalar()
 warp.SetInputConnection(geometry.GetOutputPort())
-warp.SetScaleFactor(20)
-# footmapper = vtk.vtkGPUVolumeRayCastMapper()
-# footmapper.SetInputConnection(imageReader.GetOutputPort())
-# #footmapper.ScalarVisibilityOff()
+warp.SetScaleFactor(1)
 
 #Use vtkMergeFilter to combine the original image with the warped geometry.
 merge = vtk.vtkMergeFilter()
@@ -70,125 +127,57 @@ renWin.AddRenderer(ren)
 iren = vtk.vtkRenderWindowInteractor()
 iren.SetRenderWindow(renWin)
 
+interactor = vtk.vtkRenderWindowInteractor()
+interactor.SetRenderWindow(renWin)
+ 
 # Add the actors to the renderer, set the background and size.
 ren.AddActor(actor)
 ren.ResetCamera()
 ren.SetBackground(colors.GetColor3d('BkgColor'))
-# ren.GetActiveCamera().Azimuth(20)
-# ren.GetActiveCamera().Elevation(30)
-# ren.ResetCameraClippingRange()
-# ren.GetActiveCamera().Zoom(1.3)
-# ren.GetActiveCamera().SetPosition(0, 0, 0)
-# ren.GetActiveCamera().SetFocalPoint(0, 0, 0)
 ren.GetActiveCamera().SetViewUp(0.51, 0.54, 0.67)
 ren.ResetCameraClippingRange()
 
 renWin.SetSize(700, 700)
 renWin.SetWindowName('ImageWarp')
 
+height = 0.0
+slwP = SliderProperties()
+slwP.initialValue = height
+slwP.title = 'Exaggeration'
+
+sliderWidgetMetallic = MakeSliderWidget(slwP)
+sliderWidgetMetallic.SetInteractor(interactor)
+sliderWidgetMetallic.SetAnimationModeToAnimate()
+sliderWidgetMetallic.EnabledOn()
+
+
+
+# configure the basic properties
+actor.GetProperty().SetMetallic(height)
+
+# Create the slider callbacks to manipulate metallicity and roughness
+sliderWidgetMetallic.AddObserver(vtk.vtkCommand.InteractionEvent, SliderCallbackMetallic(actor))
+
+
+
+axes = vtk.vtkAxesActor()
+
+widget = vtk.vtkOrientationMarkerWidget()
+rgba = [0.0, 0.0, 0.0, 0.0]
+colors.GetColor("Carrot", rgba)
+widget.SetOutlineColor(rgba[0], rgba[1], rgba[2])
+widget.SetOrientationMarker(axes)
+widget.SetInteractor(interactor)
+widget.SetViewport(0.0, 0.2, 0.2, 0.4)
+widget.SetEnabled(1)
+widget.InteractiveOn()
+
+
 # Render the image.
-iren.Initialize()
+interactor.Initialize()
 renWin.Render()
-iren.Start()
-
-# volume_property = vtk.vtkVolumeProperty()
-
-# #volume_property.SetGradientOpacity(volume_gradient_opacity)
-# volume_property.SetInterpolationTypeToLinear()
-# volume_property.ShadeOn()
-# volume_property.SetAmbient(0.4)
-# volume_property.SetDiffuse(0.6)
-# volume_property.SetSpecular(0.2)
-
-# volume = vtk.vtkVolume()
-# volume.SetMapper(footmapper)
-# volume.SetProperty(volume_property)
-
-# #################################################################
-
-# # #Insert isosurfacing, scalebar, and text code here
-# # hydrogen = vtk.vtkMarchingCubes()
-# # hydrogen.SetInputData(imageReader.GetOutput());
-# # hydrogen.ComputeNormalsOn();
-# # hydrogen.SetValue(0,isovalue)
-
-# # # The mapper is responsible for pushing the geometry into the graphics
-# # # library. It may also do color mapping, if scalars or other
-# # # attributes are defined.
-# # colors = vtk.vtkNamedColors()
-# # hydrogenMapper = vtk.vtkPolyDataMapper()
-# # hydrogenMapper.SetInputConnection(hydrogen.GetOutputPort())
-# # hydrogenMapper.ScalarVisibilityOff()
-
-# # #hydrogenActor
-# # hydrogenActor = vtk.vtkVolume()
-# # volumeprop = vtk.vtkVolumeProperty()
-# # #hydrogenActor.SetMapper(hydrogenMapper)
-# # #hydrogenActor.GetProperty().EdgeVisibilityOn()
-# # #hydrogenActor.GetProperty().SetColor(ctf.GetColor(isovalue))
-# # #hydrogenActor.GetProperty().SetColor(ctf.GetColor(isovalue));
-# # #hydrogenActor.SetScalarOpacity(opf);
-# # volumeprop.SetScalarOpacity(opf);
+interactor.Start()
 
 
-# #A renderer that renders our geometry into the render window
-# renderer = vtk.vtkRenderer()
-# renderer.SetBackground(0.1, 0.1, 0.2)
 
-# # #text stuff
-# # txt = vtk.vtkTextActor()
-# # txt.SetInput("Isovalue: "+str(isovalue))
-# # txtprop = txt.GetTextProperty()
-# # txtprop.SetFontFamilyToArial()
-# # txtprop.BoldOn()
-# # txtprop.SetFontSize(24)
-# # txtprop.ShadowOn()
-# # txtprop.SetShadowOffset(4, 4)
-# # txtprop.SetColor(colors.GetColor3d("White"))
-# # txt.SetDisplayPosition(20, 30)
-
-# #Add actors to our renderer
-# renderer.AddViewProp(volume)
-# # renderer.AddActor(txt)
-# #TODO: You'll probably need to add additional actors to the scene
-
-
-# camera = renderer.GetActiveCamera()
-# c = volume.GetCenter()
-# camera.SetViewUp(0, 0, -1)
-# camera.SetPosition(c[0], c[1] - 800, c[2])
-# camera.SetFocalPoint(c[0], c[1], c[2])
-# camera.Azimuth(0.0)
-# camera.Elevation(90.0)
-
-# #The render window
-# renwin = vtk.vtkRenderWindow()
-# renwin.SetSize(850, 850);
-# renwin.AddRenderer(renderer)
-
-# #scalarbar
-# # scalebar = vtk.vtkScalarBarActor()
-# # scalebar.SetLookupTable(ctf)
-# # renderer.AddActor(scalebar)
-
-# #Interactor to handle mouse and keyboard events
-# interactor = vtk.vtkRenderWindowInteractor()
-# #interactor.SetInteractorStyle(MyInteractorStyle(parent = interactor))
-# interactor.SetRenderWindow(renwin)
-
-
-# plane = vtk.vtkImplicitPlaneRepresentation();
-# plane.SetPlaceFactor(1.00);
-# plane.SetOrigin(0,125,125)
-# plane.OutsideBoundsOn();
-# plane.OutlineTranslationOff();
-# plane.SetTranslationAxisOff();
-
-# planewidget = vtk.vtkImplicitPlaneWidget2();
-# planewidget.SetInteractor(interactor);
-# planewidget.SetRepresentation(plane);
-
-# interactor.Initialize()
-# planewidget.On()
-# interactor.Start()
 
