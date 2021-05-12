@@ -1,26 +1,33 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Fri Apr  2 14:47:21 2021
+Final Project for Data Visualization Spring 2021 
+Interactive Topographic Map of the Surface of venus 
 
 @author: Bekah
 """
 
 #!/usr/bin/env python
 
-##################### TUTORIALS USED: #####################
+##################### TUTORIALS USED: ########################################
 
-    #
+    #Project inspiration: https://www.cs.purdue.edu/homes/cs530/projects/project1.html
+    #Image Warping code / guidance: https://kitware.github.io/vtk-examples/site/Python/Images/ImageWarp/
+    #Also used bits of code from assignments 4 / 5 of this class 
     
-###############################################################
+##############################################################################
 
 from __future__ import print_function
-
 import vtk
 
+##############################################################################
+
+# Import Colors 
 colors = vtk.vtkNamedColors()
 
-# # #Interactor style that handles mouse and keyboard events
+# # #Interactor style 
+
+# Interactor style for plane widget 
 class vtkMyCallback(object):
 
     def __call__(self,caller,ev):
@@ -34,7 +41,9 @@ class vtkMyCallback(object):
         mapper.SetCroppingRegionPlanes(xpoint[0],256,xpoint[1],256,xpoint[2],256)
         print(xpoint)
 
+##############################################################################
 
+# Interactor style for key press up / down (changes scale factor of warping)
 class MyInteractorStyle(vtk.vtkInteractorStyleTrackballCamera):
 
     def __init__(self,parent=None):
@@ -46,79 +55,45 @@ class MyInteractorStyle(vtk.vtkInteractorStyleTrackballCamera):
     def keyPress(self,obj,event):
       key = self.parent.GetKeySym()
       global value 
-      if(key == "Up"):
+      if(key == "Up"): # if UP is pressed, increases 0.002
             value+=0.002
-          #TODO: have this increase the isovalue
-          # angle += 0.2
-          # ren.GetActiveCamera().SetViewUp(0.0, 0.5, angle)
-          # renWin.Render()
+
             warp = vtk.vtkWarpScalar()
             warp.SetInputConnection(geometry.GetOutputPort())
             warp.SetScaleFactor(value)
         
-        #Use vtkMergeFilter to combine the original image with the warped geometry.
             #merge = vtk.vtkMergeFilter()
             #merge.SetGeometryConnection(warp.GetOutputPort())
             #merge.SetScalarsConnection(imageReader.GetOutputPort())
             #mapper = vtk.vtkDataSetMapper()
             mapper = vtk.vtkPolyDataMapper()
             mapper.SetInputConnection(warp.GetOutputPort()) # warp 
-           #self.actorProperty.SetScaleFactor(value)
             mapper.SetScalarRange(0, 11687)
-
             actor.SetMapper(mapper)
+            renWin.Render()
+
             print("Up")
             print(value)
-      if(key == "Down"):
-          #TODO: have this decrease the isovalue
+            
+      if(key == "Down"): # if DOWN is pressed, decreases 0.002 
             value-=0.002
-          #TODO: have this increase the isovalue
-          # angle += 0.2
-          # ren.GetActiveCamera().SetViewUp(0.0, 0.5, angle)
-          # renWin.Render()
+            
             warp = vtk.vtkWarpScalar()
             warp.SetInputConnection(geometry.GetOutputPort())
             warp.SetScaleFactor(value)
         
-        #Use vtkMergeFilter to combine the original image with the warped geometry.
             #merge = vtk.vtkMergeFilter()
             #merge.SetGeometryConnection(warp.GetOutputPort())
            # merge.SetScalarsConnection(imageReader.GetOutputPort())
            # mapper = vtk.vtkDataSetMapper()
             mapper = vtk.vtkPolyDataMapper()
             mapper.SetInputConnection(warp.GetOutputPort())
-           #self.actorProperty.SetScaleFactor(value)
             mapper.SetScalarRange(0, 11687)
-
             actor.SetMapper(mapper)
-            print(value)
-            renWin.Render()
+            
             print("Down")
-
-# def MakeButtonWidget(): 
-    
-#     upperRight = vtk.vtkCoordinate()
-#     upperRight.SetCoordinateSystemToNormalizedDisplay()
-#     upperRight.SetValue(1.0, 1.0)
-
-#     bds = [0]*6
-#     sz = 50.0
-#     bds[0] = upperRight.GetComputedDisplayValue(ren)[0] - sz
-#     bds[1] = bds[0] + sz
-#     bds[2] = upperRight.GetComputedDisplayValue(ren)[1] - sz
-#     bds[3] = bds[2] + sz
-#     bds[4] = bds[5] = 0.0 
-
-#     buttonRep = vtk.vtkTexturedButtonRepresentation()
-#     buttonRep.SetNumberOfStates(2)
-#     buttonRep.SetPlaceFactor(1)
-#     buttonRep.PlaceWidget(bds)
-    
-#     buttonWidget = vtk.vtkButtonWidget()
-#     buttonWidget.SetRepresentation(buttonRep)
-    
-#     return buttonWidget
-
+            print(value)
+           
 
 # class SliderProperties:
 #     tubeWidth = 0.008
@@ -185,17 +160,9 @@ class MyInteractorStyle(vtk.vtkInteractorStyleTrackballCamera):
     
 #     return
 
-#############################################################################
+###############################################################################
 
-#Loader for our structured dataset
-imageReader = vtk.vtkXMLImageDataReader()
-imageReader.SetFileName("./venus_topo.vti")
-imageReader.Update()
-
-filteredImage = vtk.vtkImageThreshold() 
-filteredImage.SetInputConnection(imageReader.GetOutputPort())
-filteredImage.ThresholdByLower(0)
-filteredImage.Update()
+# Trying to do texture mapping or color 
 
 # Read the image data from a file
 # reader = vtk.vtkXMLStructuredGridReader()
@@ -208,6 +175,21 @@ filteredImage.Update()
 # texture.SetInputConnection(reader.GetOutputPort())
 #texture.SetPosition(0,0.5,.7)
     
+# COLOR TRANSFER FUNCTION
+ctf = vtk.vtkColorTransferFunction();
+ctf.AddRGBPoint(0,0,0,0)
+ctf.AddRGBPoint(16,0.090196,0,0)
+ctf.AddRGBPoint(32,0.180392,0,0)
+
+##############################################################################
+
+# LOADING IMAGE 
+
+#Loader for our structured dataset
+imageReader = vtk.vtkXMLImageDataReader()
+imageReader.SetFileName("./venus_topo.vti")
+imageReader.Update()
+
 #Print dimensions and range of the 3d image
 dims = imageReader.GetOutput().GetDimensions()
 print(imageReader.GetClassName())
@@ -216,36 +198,43 @@ print("Dimensions of image: " + str(dims[0]) + " x "
 range = imageReader.GetOutput().GetScalarRange();
 print("Range of image: " + str(range[0]) + " to " +  str(range[1]))
 
-# COLOR TRANSFER FUNCTION
-ctf = vtk.vtkColorTransferFunction();
+# Trying to filter out the NaN values of ~ -30000
+filteredImage = vtk.vtkImageThreshold() 
+filteredImage.SetInputConnection(imageReader.GetOutputPort())
+filteredImage.ThresholdByLower(-5000)
+filteredImage.Update()
 
-ctf.AddRGBPoint(0,0,0,0)
-ctf.AddRGBPoint(16,0.090196,0,0)
-ctf.AddRGBPoint(32,0.180392,0,0)
+
+##############################################################################
+# WARPING AND MAPPING THE TOPO MAP 
 
 # Convert the image to a grey scale.
 #luminance = vtk.vtkImageLuminance()
 #luminance.SetInputConnection(imageReader.GetOutputPort())
-    # Pass the data to the pipeline as polygons.
+# Pass the data to the pipeline as polygons.
 geometry = vtk.vtkImageDataGeometryFilter()
 geometry.SetInputConnection(filteredImage.GetOutputPort()) #CHANGED
-    # Warp the data in a direction perpendicular to the image plane.
+# Warp the data in a direction perpendicular to the image plane.
 warp = vtk.vtkWarpScalar()
 warp.SetInputConnection(geometry.GetOutputPort()) # used to say geometry
-warp.SetScaleFactor(.002)
-
+value = 0.002
+warp.SetScaleFactor(value)
 
 #Use vtkMergeFilter to combine the original image with the warped geometry.
 #merge = vtk.vtkMergeFilter()
 #merge.SetGeometryConnection(warp.GetOutputPort())
 #merge.SetScalarsConnection(imageReader.GetOutputPort())
-#mapper = vtk.vtkDataSetMapper()
-mapper = vtk.vtkPolyDataMapper()
+mapper = vtk.vtkDataSetMapper()
+#mapper = vtk.vtkPolyDataMapper()
 mapper.SetInputConnection(warp.GetOutputPort()) #used to say merge
 mapper.SetScalarRange(0, 11687)
+mapper.SetLookupTable(ctf)
+
 actor = vtk.vtkActor()
 actor.SetMapper(mapper)
 #actor.SetTexture(texture)
+
+##############################################################################
 
 
 # Create the rendering window, renderer, and interactive renderer.
@@ -269,15 +258,7 @@ ren.ResetCameraClippingRange()
 renWin.SetSize(700, 700)
 renWin.SetWindowName('ImageWarp')
 
-# height = 0.0
-# slwP = SliderProperties()
-# slwP.initialValue = height
-# slwP.title = 'Exaggeration'
-
-# sliderWidgetMetallic = MakeSliderWidget(slwP)
-# sliderWidgetMetallic.SetInteractor(interactor)
-# sliderWidgetMetallic.SetAnimationModeToAnimate()
-# sliderWidgetMetallic.EnabledOn()
+##############################################################################
 
 # contours 
 # extractVOI = vtk.vtkExtractVOI()
@@ -303,18 +284,27 @@ renWin.SetWindowName('ImageWarp')
 
 # ren.AddActor(isoActor)
 
+##############################################################################
+# SLIDER STUFF 
 
-# buttonWidget_a = MakeButtonWidget()
-# buttonWidget_a.SetInteractor(interactor)
-# buttonWidget_a.On()
-# buttonWidget_a.AddObserver(vtk.vtkCommand.StateChangedEvent, buttonCallback)
-# # 
+# height = 0.0
+# slwP = SliderProperties()
+# slwP.initialValue = height
+# slwP.title = 'Exaggeration'
+
+# sliderWidgetMetallic = MakeSliderWidget(slwP)
+# sliderWidgetMetallic.SetInteractor(interactor)
+# sliderWidgetMetallic.SetAnimationModeToAnimate()
+# sliderWidgetMetallic.EnabledOn() 
 
 # configure the basic properties
 # actor.GetProperty().SetMetallic(height)
 
 # Create the slider callbacks to manipulate metallicity and roughness
 # sliderWidgetMetallic.AddObserver(vtk.vtkCommand.InteractionEvent, SliderCallbackMetallic(actor))
+
+##############################################################################
+# IMPLICIT PLANE WIDGET
 
 #create plane
 plane = vtk.vtkImplicitPlaneRepresentation();
@@ -333,15 +323,31 @@ planewidget.SetRepresentation(plane);
 watcher = vtkMyCallback()
 planewidget.AddObserver('InteractionEvent',watcher)
 
+##############################################################################
+# ADD TEXT 
+
 #text
 txt = vtk.vtkTextActor()
 txt.SetInput("Up Arrow: Increase vertical exaggeration of topography, Down Arrow: Decrease vertical exaggeration")
 txtprop = txt.GetTextProperty()
 txtprop.SetFontFamilyToArial()
-txtprop.BoldOn()
+#txtprop.BoldOn()
 txtprop.SetFontSize(12)
 txt.SetDisplayPosition(20, 30)
 ren.AddActor(txt)
+
+# more text 
+txt2 = vtk.vtkTextActor()
+txt2.SetInput("Topography of the Surface of Venus")
+txt2prop = txt2.GetTextProperty()
+txt2prop.SetFontFamilyToArial()
+txt2prop.BoldOn()
+txt2prop.SetFontSize(24)
+txt2.SetDisplayPosition(20, 60)
+ren.AddActor(txt2)
+
+##############################################################################
+# ADD AXIS 
 
 axes = vtk.vtkAxesActor()
 
@@ -355,15 +361,22 @@ widget.SetViewport(0.0, 0.2, 0.2, 0.4)
 widget.SetEnabled(1)
 widget.InteractiveOn()
 
+##############################################################################
+#scalarbar
+scalebar = vtk.vtkScalarBarActor()
+scalebar.SetLookupTable(ctf)
+ren.AddActor(scalebar)
 
+##############################################################################
+# RENDER 
 
-
-# Render the image.
+# Render the image
 interactor.Initialize()
 planewidget.On()
 renWin.Render()
 interactor.Start()
 
+##############################################################################
 
 
 
