@@ -68,7 +68,8 @@ class MyInteractorStyle(vtk.vtkInteractorStyleTrackballCamera):
             #mapper = vtk.vtkDataSetMapper()
             mapper = vtk.vtkPolyDataMapper()
             mapper.SetInputConnection(warp.GetOutputPort()) # warp 
-            mapper.SetScalarRange(0, 11687)
+            #mapper.SetScalarRange(0, 11687)
+            mapper.SetLookupTable(ctf)
             actor.SetMapper(mapper)
             renWin.Render()
 
@@ -88,78 +89,13 @@ class MyInteractorStyle(vtk.vtkInteractorStyleTrackballCamera):
            # mapper = vtk.vtkDataSetMapper()
             mapper = vtk.vtkPolyDataMapper()
             mapper.SetInputConnection(warp.GetOutputPort())
-            mapper.SetScalarRange(0, 11687)
+            #mapper.SetScalarRange(0, 11687)
+            mapper.SetLookupTable(ctf)
             actor.SetMapper(mapper)
             
             print("Down")
             print(value)
            
-
-# class SliderProperties:
-#     tubeWidth = 0.008
-#     sliderLength = 0.008
-#     titleHeight = 0.02
-#     labelHeight = 0.02
-
-#     minimumValue = 0.0
-#     maximumValue = .006
-#     initialValue = 0.002
-#     p1 = [0.1, 0.1]
-#     p2 = [0.9, 0.1]
-
-#     title = None
-
-
-# def MakeSliderWidget(properties):
-#     slider = vtk.vtkSliderRepresentation2D()
-
-#     slider.SetMinimumValue(properties.minimumValue)
-#     slider.SetMaximumValue(properties.maximumValue)
-#     slider.SetValue(properties.initialValue)
-#     slider.SetTitleText(properties.title)
-
-#     slider.GetPoint1Coordinate().SetCoordinateSystemToNormalizedDisplay()
-#     slider.GetPoint1Coordinate().SetValue(properties.p1[0], properties.p1[1])
-#     slider.GetPoint2Coordinate().SetCoordinateSystemToNormalizedDisplay()
-#     slider.GetPoint2Coordinate().SetValue(properties.p2[0], properties.p2[1])
-
-#     slider.SetTubeWidth(properties.tubeWidth)
-#     slider.SetSliderLength(properties.sliderLength)
-#     slider.SetTitleHeight(properties.titleHeight)
-#     slider.SetLabelHeight(properties.labelHeight)
-
-#     sliderWidget = vtk.vtkSliderWidget()
-#     sliderWidget.SetRepresentation(slider)
-
-#     return sliderWidget
-
-
-# class SliderCallbackMetallic:
-#     def __init__(self, actorProperty):
-#         self.actorProperty = actorProperty
- 
-#     def __call__(self, caller, ev):
-#         sliderWidget = caller
-#         value = sliderWidget.GetRepresentation().GetValue()
-#        # self.actorProperty.SetMetallic(value)
-#         warp = vtk.vtkWarpScalar()
-#         warp.SetInputConnection(geometry.GetOutputPort())
-#         warp.SetScaleFactor(value)
-    
-#     #Use vtkMergeFilter to combine the original image with the warped geometry.
-#         #merge = vtk.vtkMergeFilter()
-#         #merge.SetGeometryConnection(warp.GetOutputPort())
-#        # merge.SetScalarsConnection(imageReader.GetOutputPort())
-#         mapper = vtk.vtkDataSetMapper()
-#         mapper.SetInputConnection(warp.GetOutputPort())
-#        #self.actorProperty.SetScaleFactor(value)
-#         actor.SetMapper(mapper)
-        
-# def buttonCallback(widget, event):
-#     value = widget.GetRepresentation().GetState()
-    
-#     return
-
 ###############################################################################
 
 # Trying to do texture mapping or color 
@@ -177,9 +113,31 @@ class MyInteractorStyle(vtk.vtkInteractorStyleTrackballCamera):
     
 # COLOR TRANSFER FUNCTION
 ctf = vtk.vtkColorTransferFunction();
-ctf.AddRGBPoint(0,0,0,0)
-ctf.AddRGBPoint(16,0.090196,0,0)
-ctf.AddRGBPoint(32,0.180392,0,0)
+ctf.AddRGBPoint(-32678,0.89016,.956863,0.984314)
+ctf.AddRGBPoint(-5155.99,0.776471,0.764706,0.678431)
+ctf.AddRGBPoint(-4399.33,0.827451,0.823529,0.737255)
+ctf.AddRGBPoint(-3642.67,0.890196,0.890196,0.807843)
+ctf.AddRGBPoint(-2886,0.952941,0.952941,0.894118)
+ctf.AddRGBPoint(-2156,0.988235,0.988235,0.756863)
+ctf.AddRGBPoint(-1428,0.980392,0.972549,0.670588)
+ctf.AddRGBPoint(-699,0.980392,0.94902,0.596078)
+ctf.AddRGBPoint(28.9457,0.972549,0.917647,0.513725)
+ctf.AddRGBPoint(757.574,0.968627,0.878431,0.423529)
+ctf.AddRGBPoint(1486.2,0.964706,0.827451,0.32549)
+ctf.AddRGBPoint(2214.83,0.95241,0.768627,0.247059)
+ctf.AddRGBPoint(2943.46,0.945098,0.709804,0.184314)
+ctf.AddRGBPoint(3672.09,0.937255,0.643137,0.125169)
+ctf.AddRGBPoint(4400.72,0.92549,0.580392,0.0784314)
+ctf.AddRGBPoint(5129.34,0.917647,0.521569,0.0470588)
+ctf.AddRGBPoint(5857.97,0.901961,0.458824,0.027451)
+ctf.AddRGBPoint(6586.6,0.862745,0.380392,0.0117647)
+ctf.AddRGBPoint(7315.23,0.788235,0.290196,0)
+ctf.AddRGBPoint(8043.86,0.741176,0.227451,0.00392157)
+ctf.AddRGBPoint(8772.49,0.662745,0.168627,0.0156863)
+ctf.AddRGBPoint(9501.11,0.588235,0.113725,0.0235294)
+ctf.AddRGBPoint(10229.7,0.494118,0.054902,0.0352941)
+ctf.AddRGBPoint(10958.4,0.396078,0.0392157,0.0588235)
+ctf.AddRGBPoint(11687,0.301961,0.047059,0.090196)
 
 ##############################################################################
 
@@ -227,7 +185,7 @@ warp.SetScaleFactor(value)
 mapper = vtk.vtkDataSetMapper()
 #mapper = vtk.vtkPolyDataMapper()
 mapper.SetInputConnection(warp.GetOutputPort()) #used to say merge
-mapper.SetScalarRange(0, 11687)
+#mapper.SetScalarRange(0, 11687)
 mapper.SetLookupTable(ctf)
 
 actor = vtk.vtkActor()
@@ -255,53 +213,8 @@ ren.SetBackground(colors.GetColor3d('BkgColor'))
 ren.GetActiveCamera().SetViewUp(0.0, 0.5, .7)
 ren.ResetCameraClippingRange()
 
-renWin.SetSize(700, 700)
-renWin.SetWindowName('ImageWarp')
-
-##############################################################################
-
-# contours 
-# extractVOI = vtk.vtkExtractVOI()
-# extractVOI.SetInputConnection(imageReader.GetOutputPort())
-# #extractVOI.SetVOI(0, 255, 0, 255, 45, 45)
-
-# scalarRange = extractVOI.GetOutput().GetScalarRange()
-
-# isoMapper = vtk.vtkPolyDataMapper()
-# isoMapper.SetScalarRange(scalarRange)
-
-# contour = vtk.vtkContourFilter()
-# contour.SetInputConnection(extractVOI.GetOutputPort())
-# contour.GenerateValues(12, scalarRange)
-# isoMapper.SetInputConnection(contour.GetOutputPort())
-
-# isoMapper.ScalarVisibilityOn()
-# isoMapper.SetScalarRange(scalarRange)
-
-# isoActor = vtk.vtkActor()
-# isoActor.SetMapper(isoMapper)
-# isoActor.GetProperty().SetColor(colors.GetColor3d('Wheat'))
-
-# ren.AddActor(isoActor)
-
-##############################################################################
-# SLIDER STUFF 
-
-# height = 0.0
-# slwP = SliderProperties()
-# slwP.initialValue = height
-# slwP.title = 'Exaggeration'
-
-# sliderWidgetMetallic = MakeSliderWidget(slwP)
-# sliderWidgetMetallic.SetInteractor(interactor)
-# sliderWidgetMetallic.SetAnimationModeToAnimate()
-# sliderWidgetMetallic.EnabledOn() 
-
-# configure the basic properties
-# actor.GetProperty().SetMetallic(height)
-
-# Create the slider callbacks to manipulate metallicity and roughness
-# sliderWidgetMetallic.AddObserver(vtk.vtkCommand.InteractionEvent, SliderCallbackMetallic(actor))
+renWin.SetSize(1500, 700)
+renWin.SetWindowName('VenusTopo')
 
 ##############################################################################
 # IMPLICIT PLANE WIDGET
@@ -365,6 +278,11 @@ widget.InteractiveOn()
 #scalarbar
 scalebar = vtk.vtkScalarBarActor()
 scalebar.SetLookupTable(ctf)
+scalebar.SetTitle("Elevation (m)")
+scalebar.SetVerticalTitleSeparation(20)
+scalebar.SetBarRatio(.26)
+scalebar.SetMaximumHeightInPixels(400)
+scalebar.UnconstrainedFontSizeOn()
 ren.AddActor(scalebar)
 
 ##############################################################################
